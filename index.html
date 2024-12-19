@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Navigator - Feature Control</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+
+  <!-- Main Container -->
+  <div class="max-w-4xl mx-auto mt-10 p-6 bg-white rounded-lg shadow-md">
+
+    <!-- Tabs for Preferences and Exits -->
+    <div class="flex border-b">
+      <button id="preferencesTab" class="tab w-1/2 py-2 text-center text-purple-600 border-b-2 border-purple-600">
+        Preferences
+      </button>
+      <button id="exitsTab" class="tab w-1/2 py-2 text-center text-gray-600 hover:text-purple-600">
+        Exits
+      </button>
+    </div>
+
+    <!-- Content for Preferences Tab -->
+    <div id="preferencesContent" class="tab-content p-4">
+      <!-- Preferences Section -->
+      <h1 class="text-xl font-bold mb-4">Preferences</h1>
+
+      <!-- Input Selection -->
+      <div class="mb-6">
+        <label class="font-semibold block mb-2">Input</label>
+        <div class="flex items-center space-x-6">
+          <label class="flex items-center">
+            <input type="radio" name="inputType" checked class="w-5 h-5 text-purple-600 focus:ring-0">
+            <span class="ml-2">Contact Message</span>
+          </label>
+          <label class="flex items-center">
+            <input type="radio" name="inputType" class="w-5 h-5 text-purple-600 focus:ring-0">
+            <span class="ml-2">Variable</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Play Audio Section -->
+      <div class="mb-6">
+        <h2 class="font-semibold mb-2">Play Audio Message</h2>
+        <label class="block mb-2">Language of voice and audio</label>
+        <select class="w-full p-2 border rounded mb-4">
+          <option>English, United States</option>
+          <option>Spanish, Mexico</option>
+          <option>French, France</option>
+        </select>
+        <label class="font-semibold block mb-2">Select the type of message</label>
+        <div class="flex">
+          <button class="tab w-1/3 py-2 bg-purple-600 text-white rounded-tl-lg">Text to Speech</button>
+          <button class="tab w-1/3 py-2 bg-gray-200">Audio File Upload</button>
+          <button class="tab w-1/3 py-2 bg-gray-200 rounded-tr-lg">Other Sources</button>
+        </div>
+        <textarea class="w-full p-2 border rounded mt-4" rows="3" placeholder="Write the message the caller will hear..."></textarea>
+      </div>
+
+      <!-- Variables Section -->
+      <div class="mb-6">
+        <h2 class="font-semibold mb-2">Variables</h2>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-gray-700 mb-1">Step Variable</label>
+            <input type="text" value="Topic" disabled class="w-full p-2 border rounded bg-gray-100">
+          </div>
+          <div>
+            <label class="block text-gray-700 mb-1">Map to Flow Variable</label>
+            <select class="w-full p-2 border rounded">
+              <option>Select an option...</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-gray-700 mb-1">Step Variable</label>
+            <input type="text" value="Contact Message" disabled class="w-full p-2 border rounded bg-gray-100">
+          </div>
+          <div>
+            <label class="block text-gray-700 mb-1">Map to Flow Variable</label>
+            <select class="w-full p-2 border rounded">
+              <option>Select an option...</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Content for Exits Tab -->
+    <div id="exitsContent" class="tab-content p-4 hidden">
+      <!-- Timeout Section -->
+      <h1 class="text-xl font-bold mb-4">Timeout</h1>
+      <div class="mb-6">
+        <label class="block mb-2">No topics detected</label>
+        <select class="w-full p-2 border rounded mb-4">
+          <option>Choose the next step</option>
+        </select>
+
+        <label class="block mb-2">Timeout (in seconds)</label>
+        <input type="number" value="45" class="w-full p-2 border rounded mb-4">
+
+        <label class="block mb-2">Send to</label>
+        <select class="w-full p-2 border rounded">
+          <option>Choose the next step</option>
+        </select>
+      </div>
+
+      <!-- Exits by Topics -->
+      <h1 class="text-xl font-bold mb-4">Exits by Topics</h1>
+      <div id="topicsContainer" class="space-y-4">
+        <!-- Placeholder for dynamically added topics -->
+      </div>
+      <button id="addTopicButton" class="mt-4 bg-purple-600 text-white py-2 px-4 rounded-lg hover:bg-purple-700">
+        Add Topic
+      </button>
+    </div>
+
+    <!-- Test Button -->
+    <div class="mt-6">
+      <button id="testButton" class="w-full bg-purple-600 text-white py-2 px-4 rounded-lg hover:bg-purple-700">
+        Test
+      </button>
+    </div>
+  </div>
+
+  <!-- JavaScript -->
+  <script>
+    // Tab switching logic
+    const preferencesTab = document.getElementById('preferencesTab');
+    const exitsTab = document.getElementById('exitsTab');
+    const preferencesContent = document.getElementById('preferencesContent');
+    const exitsContent = document.getElementById('exitsContent');
+
+    preferencesTab.addEventListener('click', () => {
+      preferencesContent.classList.remove('hidden');
+      exitsContent.classList.add('hidden');
+      preferencesTab.classList.add('text-purple-600', 'border-purple-600');
+      exitsTab.classList.remove('text-purple-600', 'border-purple-600');
+    });
+
+    exitsTab.addEventListener('click', () => {
+      exitsContent.classList.remove('hidden');
+      preferencesContent.classList.add('hidden');
+      exitsTab.classList.add('text-purple-600', 'border-purple-600');
+      preferencesTab.classList.remove('text-purple-600', 'border-purple-600');
+    });
+
+    // Add Topic Logic
+    const addTopicButton = document.getElementById('addTopicButton');
+    const topicsContainer = document.getElementById('topicsContainer');
+
+    addTopicButton.addEventListener('click', () => {
+      const topicDiv = document.createElement('div');
+      topicDiv.className = 'p-4 border rounded relative space-y-4';
+
+      topicDiv.innerHTML = `
+        <!-- Delete Button -->
+        <button class="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600 delete-topic">
+          Delete
+        </button>
+
+        <label class="block mb-2">Sample contact message</label>
+        <input type="text" placeholder="Insert sample contact message..." class="w-full p-2 border rounded mb-4">
+
+        <label class="block mb-2">Exit Name</label>
+        <input type="text" placeholder="Name your exit" class="w-full p-2 border rounded mb-4">
+
+        <label class="block mb-2">Send to</label>
+        <select class="w-full p-2 border rounded">
+          <option>Choose the next step</option>
+        </select>
+      `;
+
+      // Add Delete Button Event Listener
+      topicDiv.querySelector('.delete-topic').addEventListener('click', () => {
+        topicDiv.remove();
+      });
+
+      topicsContainer.appendChild(topicDiv);
+    });
+  </script>
+</body>
+</html>
