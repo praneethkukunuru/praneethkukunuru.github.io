@@ -23,7 +23,6 @@
 
     <!-- Content for Preferences Tab -->
     <div id="preferencesContent" class="tab-content p-4">
-      <!-- Preferences Section -->
       <h1 class="text-xl font-bold mb-4">Preferences</h1>
 
       <!-- Input Selection -->
@@ -39,24 +38,6 @@
             <span class="ml-2">Variable</span>
           </label>
         </div>
-      </div>
-
-      <!-- Play Audio Section -->
-      <div class="mb-6">
-        <h2 class="font-semibold mb-2">Play Audio Message</h2>
-        <label class="block mb-2">Language of voice and audio</label>
-        <select class="w-full p-2 border rounded mb-4">
-          <option>English, United States</option>
-          <option>Spanish, Mexico</option>
-          <option>French, France</option>
-        </select>
-        <label class="font-semibold block mb-2">Select the type of message</label>
-        <div class="flex">
-          <button class="tab w-1/3 py-2 bg-purple-600 text-white rounded-tl-lg">Text to Speech</button>
-          <button class="tab w-1/3 py-2 bg-gray-200">Audio File Upload</button>
-          <button class="tab w-1/3 py-2 bg-gray-200 rounded-tr-lg">Other Sources</button>
-        </div>
-        <textarea class="w-full p-2 border rounded mt-4" rows="3" placeholder="Write the message the caller will hear..."></textarea>
       </div>
 
       <!-- Variables Section -->
@@ -89,15 +70,17 @@
 
     <!-- Content for Exits Tab -->
     <div id="exitsContent" class="tab-content p-4 hidden">
+      <h1 class="text-xl font-bold mb-4">Exits</h1>
+
       <!-- Timeout Section -->
-      <h1 class="text-xl font-bold mb-4">Timeout</h1>
       <div class="mb-6">
+        <h2 class="font-semibold mb-2">Timeout</h2>
         <label class="block mb-2">No topics detected</label>
         <select class="w-full p-2 border rounded mb-4">
           <option>Choose the next step</option>
         </select>
 
-        <label class="block mb-2">Timeout (in seconds)</label>
+        <label class="block mb-2">Time in seconds</label>
         <input type="number" value="45" class="w-full p-2 border rounded mb-4">
 
         <label class="block mb-2">Send to</label>
@@ -155,15 +138,27 @@
       topicDiv.className = 'p-4 border rounded relative space-y-4';
 
       topicDiv.innerHTML = `
-        <!-- Delete Button -->
+        <!-- Delete Topic Button -->
         <button class="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600 delete-topic">
-          Delete
+          Delete Topic
         </button>
 
-        <label class="block mb-2">Sample contact message</label>
-        <input type="text" placeholder="Insert sample contact message..." class="w-full p-2 border rounded mb-4">
+        <label class="block mb-2">Sample Contact Messages</label>
+        <div class="sample-contact-messages space-y-4">
+          <div class="sample-contact-message flex items-center space-x-2">
+            <input type="text" placeholder="Insert sample contact message..." class="w-full p-2 border rounded">
+            <button class="delete-message text-gray-500 hover:text-gray-700">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3-11a1 1 0 10-2 0v6a1 1 0 102 0V7zm-4 0a1 1 0 10-2 0v6a1 1 0 102 0V7z" clip-rule="evenodd" />
+              </svg>
+            </button>
+          </div>
+        </div>
+        <button class="add-message bg-purple-600 text-white px-2 py-1 rounded hover:bg-purple-700 mt-2">
+          Add Message
+        </button>
 
-        <label class="block mb-2">Exit Name</label>
+        <label class="block mt-4 mb-2">Exit Name</label>
         <input type="text" placeholder="Name your exit" class="w-full p-2 border rounded mb-4">
 
         <label class="block mb-2">Send to</label>
@@ -172,7 +167,38 @@
         </select>
       `;
 
-      // Add Delete Button Event Listener
+      // Add logic for adding/deleting sample contact messages
+      const addMessageButton = topicDiv.querySelector('.add-message');
+      const messagesContainer = topicDiv.querySelector('.sample-contact-messages');
+
+      addMessageButton.addEventListener('click', () => {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = 'sample-contact-message flex items-center space-x-2';
+        messageDiv.innerHTML = `
+          <input type="text" placeholder="Insert sample contact message..." class="w-full p-2 border rounded">
+          <button class="delete-message text-gray-500 hover:text-gray-700">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3-11a1 1 0 10-2 0v6a1 1 0 102 0V7zm-4 0a1 1 0 10-2 0v6a1 1 0 102 0V7z" clip-rule="evenodd" />
+            </svg>
+          </button>
+        `;
+
+        // Add delete logic for the newly added message
+        messageDiv.querySelector('.delete-message').addEventListener('click', () => {
+          messageDiv.remove();
+        });
+
+        messagesContainer.appendChild(messageDiv);
+      });
+
+      // Add delete logic for the initial message
+      topicDiv.querySelectorAll('.delete-message').forEach((button) => {
+        button.addEventListener('click', (e) => {
+          e.target.closest('.sample-contact-message').remove();
+        });
+      });
+
+      // Add delete topic logic
       topicDiv.querySelector('.delete-topic').addEventListener('click', () => {
         topicDiv.remove();
       });
