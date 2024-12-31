@@ -9,7 +9,7 @@
 <body class="bg-gray-100">
 
   <!-- Main Container -->
-  <div class="max-w-4xl mx-auto mt-10 p-6 bg-white rounded-lg shadow-md">
+  <div id="mainContainer" class="max-w-4xl mx-auto mt-10 p-6 bg-white rounded-lg shadow-md relative">
 
     <!-- Tabs for Preferences and Exits -->
     <div class="flex border-b">
@@ -25,7 +25,7 @@
     <div id="preferencesContent" class="tab-content p-4">
       <h1 class="text-xl font-bold mb-4">Preferences</h1>
 
-      <!-- Input Selection -->
+      <!-- Input Section -->
       <div class="mb-6">
         <label class="font-semibold block mb-2">Input</label>
         <div class="flex items-center space-x-6">
@@ -54,16 +54,6 @@
               <option>Select an option...</option>
             </select>
           </div>
-          <div>
-            <label class="block text-gray-700 mb-1">Step Variable</label>
-            <input type="text" value="Contact Message" disabled class="w-full p-2 border rounded bg-gray-100">
-          </div>
-          <div>
-            <label class="block text-gray-700 mb-1">Map to Flow Variable</label>
-            <select class="w-full p-2 border rounded">
-              <option>Select an option...</option>
-            </select>
-          </div>
         </div>
       </div>
     </div>
@@ -79,17 +69,11 @@
         <select class="w-full p-2 border rounded mb-4">
           <option>Choose the next step</option>
         </select>
-
         <label class="block mb-2">Time in seconds</label>
         <input type="number" value="45" class="w-full p-2 border rounded mb-4">
-
-        <label class="block mb-2">Send to</label>
-        <select class="w-full p-2 border rounded">
-          <option>Choose the next step</option>
-        </select>
       </div>
 
-      <!-- Exits by Topics -->
+      <!-- Exits by Topics Section -->
       <h1 class="text-xl font-bold mb-4">Exits by Topics</h1>
       <div id="topicsContainer" class="space-y-4">
         <!-- Placeholder for dynamically added topics -->
@@ -103,6 +87,36 @@
     <div class="mt-6">
       <button id="testButton" class="w-full bg-purple-600 text-white py-2 px-4 rounded-lg hover:bg-purple-700">
         Test
+      </button>
+    </div>
+  </div>
+
+  <!-- Popup Overlay -->
+  <div id="popupOverlay" class="fixed inset-0 bg-gray-800 bg-opacity-75 hidden z-50 flex justify-center items-center">
+    <div class="bg-white rounded-lg shadow-lg p-6 w-96">
+      <h2 class="text-xl font-bold mb-4">Navigator Input</h2>
+
+      <!-- Text Input Section -->
+      <div class="mb-4">
+        <label class="block font-semibold mb-2">Enter text:</label>
+        <textarea id="textInput" class="w-full p-2 border rounded" rows="3" placeholder="Type your input here..."></textarea>
+        <button id="sendTextButton" class="mt-2 bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600">
+          Send
+        </button>
+      </div>
+
+      <!-- Microphone Section -->
+      <div class="mb-4">
+        <label class="block font-semibold mb-2">Use Microphone:</label>
+        <button id="startMicButton" class="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600">
+          Start Listening
+        </button>
+        <div id="transcription" class="mt-2 p-2 border rounded bg-gray-50 text-gray-700 text-sm"></div>
+      </div>
+
+      <!-- Close Button -->
+      <button id="closePopupButton" class="mt-4 w-full bg-red-500 text-white py-2 px-4 rounded hover:bg-red-600">
+        Close
       </button>
     </div>
   </div>
@@ -191,19 +205,58 @@
         messagesContainer.appendChild(messageDiv);
       });
 
-      // Add delete logic for the initial message
-      topicDiv.querySelectorAll('.delete-message').forEach((button) => {
-        button.addEventListener('click', (e) => {
-          e.target.closest('.sample-contact-message').remove();
-        });
-      });
-
-      // Add delete topic logic
       topicDiv.querySelector('.delete-topic').addEventListener('click', () => {
         topicDiv.remove();
       });
 
       topicsContainer.appendChild(topicDiv);
+    });
+
+    // Popup logic
+    const testButton = document.getElementById('testButton');
+    const popupOverlay = document.getElementById('popupOverlay');
+    const closePopupButton = document.getElementById('closePopupButton');
+
+    testButton.addEventListener('click', () => {
+      popupOverlay.classList.remove('hidden');
+    });
+
+    closePopupButton.addEventListener('click', () => {
+      popupOverlay.classList.add('hidden');
+    });
+
+    // Text Input Logic
+    const sendTextButton = document.getElementById('sendTextButton');
+    sendTextButton.addEventListener('click', () => {
+      const textInput = document.getElementById('textInput').value;
+      alert(`Text Sent to Navigator: ${textInput}`);
+    });
+
+    // Microphone Input Logic
+    const startMicButton = document.getElementById('startMicButton');
+    const transcriptionDiv = document.getElementById('transcription');
+
+    startMicButton.addEventListener('click', async () => {
+      try {
+        const speechRecognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        speechRecognition.interimResults = true;
+        speechRecognition.continuous = true;
+
+        transcriptionDiv.innerHTML = "Listening...";
+        speechRecognition.start();
+
+        speechRecognition.onresult = (event) => {
+          transcriptionDiv.innerHTML = Array.from(event.results)
+            .map((result) => result[0].transcript)
+            .join("");
+        };
+
+        speechRecognition.onerror = () => {
+          transcriptionDiv.innerHTML = "Error recognizing audio.";
+        };
+      } catch (error) {
+        transcriptionDiv.innerHTML = "Speech recognition not supported in this browser.";
+      }
     });
   </script>
 </body>
