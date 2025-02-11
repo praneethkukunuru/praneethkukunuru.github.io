@@ -1,13 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Navigator - Feature Control</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100">
-
   <!-- Drag-and-Drop JSON Upload -->
   <div id="dropArea" class="w-full h-32 border-dashed border-2 border-gray-400 rounded-lg flex items-center justify-center text-gray-500 bg-white mt-10 mb-6 mx-auto max-w-4xl">
     Drag and drop your JSON file here or click to upload.
@@ -17,7 +16,6 @@
 
   <!-- Main Container -->
   <div id="mainContainer" class="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-md relative">
-
     <!-- Tabs for Preferences and Exits -->
     <div class="flex border-b">
       <button id="preferencesTab" class="tab w-1/2 py-2 text-center text-purple-600 border-b-2 border-purple-600">
@@ -31,17 +29,16 @@
     <!-- Content for Preferences Tab -->
     <div id="preferencesContent" class="tab-content p-4">
       <h1 class="text-xl font-bold mb-4">Preferences</h1>
-
       <!-- Input Section -->
       <div class="mb-6">
         <label class="font-semibold block mb-2">Input</label>
         <div class="flex items-center space-x-6">
           <label class="flex items-center">
-            <input type="radio" name="inputType" checked class="w-5 h-5 text-purple-600 focus:ring-0">
+            <input type="radio" name="inputType" checked class="w-5 h-5 text-purple-600 focus:ring-0" />
             <span class="ml-2">Contact Message</span>
           </label>
           <label class="flex items-center">
-            <input type="radio" name="inputType" class="w-5 h-5 text-purple-600 focus:ring-0">
+            <input type="radio" name="inputType" class="w-5 h-5 text-purple-600 focus:ring-0" />
             <span class="ml-2">Variable</span>
           </label>
         </div>
@@ -51,22 +48,21 @@
     <!-- Content for Exits Tab -->
     <div id="exitsContent" class="tab-content p-4 hidden">
       <h1 class="text-xl font-bold mb-4">Exits</h1>
-
       <!-- Timeout Section -->
       <div class="mb-6">
         <h2 class="font-semibold mb-2">Timeout</h2>
         <label class="block mb-2">No topics detected</label>
-        <select class="w-full p-2 border rounded mb-4">
+        <select id="timeoutSelect" class="w-full p-2 border rounded mb-4">
           <option>Choose the next step</option>
         </select>
         <label class="block mb-2">Time in seconds</label>
-        <input type="number" value="45" class="w-full p-2 border rounded mb-4">
+        <input type="number" value="45" class="w-full p-2 border rounded mb-4" />
       </div>
 
       <!-- Exits by Topics Section -->
       <h1 class="text-xl font-bold mb-4">Exits by Topics</h1>
       <div id="topicsContainer" class="space-y-4">
-        <!-- Placeholder for dynamically added topics -->
+        <!-- Topics will be added here automatically -->
       </div>
       <button id="addTopicButton" class="mt-4 bg-purple-600 text-white py-2 px-4 rounded-lg hover:bg-purple-700">
         Add Topic
@@ -80,6 +76,7 @@
       </button>
     </div>
   </div>
+
   <!-- Popup Overlay -->
   <div id="popupOverlay" class="fixed inset-0 bg-gray-800 bg-opacity-75 hidden z-50 flex justify-center items-center">
     <div class="bg-white rounded-lg shadow-lg p-6 w-96">
@@ -92,6 +89,12 @@
         <button id="sendTextButton" class="mt-2 bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600">
           Send
         </button>
+      </div>
+
+      <!-- Classes Input Section (populated from the topics) -->
+      <div class="mb-4">
+        <label class="block font-semibold mb-2">Classes (topics):</label>
+        <textarea id="classesInput" class="w-full p-2 border rounded" rows="3" placeholder="Topics will appear here..."></textarea>
       </div>
 
       <!-- Microphone Section -->
@@ -112,7 +115,7 @@
 
   <!-- JavaScript -->
   <script>
-    // Drag and Drop JSON Upload
+    // DRAG & DROP JSON Upload
     const dropArea = document.getElementById('dropArea');
     const fileInput = document.getElementById('fileInput');
     const jsonDisplay = document.getElementById('jsonDisplay');
@@ -129,7 +132,6 @@
     dropArea.addEventListener('drop', (event) => {
       event.preventDefault();
       dropArea.classList.remove('bg-gray-200');
-
       const file = event.dataTransfer.files[0];
       handleFile(file);
     });
@@ -145,21 +147,141 @@
         alert('Please upload a valid JSON file.');
         return;
       }
-
       const reader = new FileReader();
       reader.onload = (event) => {
         try {
           const jsonData = JSON.parse(event.target.result);
           jsonDisplay.textContent = JSON.stringify(jsonData, null, 2);
           jsonDisplay.classList.remove('hidden');
-        } catch {
+          // Auto-fill the Navigator UI based on the JSON file:
+          populateNavigatorFields(jsonData);
+        } catch (e) {
           alert('Invalid JSON format.');
         }
       };
       reader.readAsText(file);
     }
 
-    // Tab switching logic
+    /**
+     * This function finds the navigator component (the step whose
+     * component name contains "ai_voice_recognition") and then uses
+     * its details (especially the exits) to auto-fill the Timeout select
+     * and the Topics container.
+     */
+    function populateNavigatorFields(jsonData) {
+      let navigatorStep = null;
+      if (jsonData.steps && Array.isArray(jsonData.steps)) {
+        for (let step of jsonData.steps) {
+          if (step.component && step.component.name && step.component.name.indexOf("ai_voice_recognition") !== -1) {
+            navigatorStep = step;
+            break;
+          }
+        }
+      }
+      if (!navigatorStep) {
+        console.log("Navigator component not found.");
+        return;
+      }
+      console.log("Navigator component found:", navigatorStep);
+
+      const timeoutSelect = document.getElementById('timeoutSelect');
+      const topicsContainer = document.getElementById('topicsContainer');
+
+      if (timeoutSelect) {
+        timeoutSelect.innerHTML = ""; // Clear existing options
+      }
+      topicsContainer.innerHTML = ""; // Clear existing topics
+
+      if (navigatorStep.exits && Array.isArray(navigatorStep.exits)) {
+        navigatorStep.exits.forEach(exit => {
+          if (exit.name.toLowerCase() === "timeout") {
+            if (timeoutSelect) {
+              let option = document.createElement("option");
+              option.value = exit.transition;
+              option.textContent = exit.name;
+              timeoutSelect.appendChild(option);
+            }
+          } else {
+            // Create a topic element for each non-timeout exit
+            const topicDiv = document.createElement('div');
+            topicDiv.className = 'p-4 border rounded relative space-y-4';
+            topicDiv.innerHTML = `
+              <button class="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600 delete-topic">
+                Delete Topic
+              </button>
+              <label class="block mb-2">Sample Contact Messages</label>
+              <div class="sample-contact-messages space-y-4">
+                <div class="sample-contact-message flex items-center space-x-2">
+                  <input type="text" placeholder="Insert sample contact message..." class="w-full p-2 border rounded">
+                  <button class="delete-message text-gray-500 hover:text-gray-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3-11a1 1 0 10-2 0v6a1 1 0 102 0V7zm-4 0a1 1 0 10-2 0v6a1 1 0 102 0V7z" clip-rule="evenodd" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              <button class="add-message bg-purple-600 text-white px-2 py-1 rounded hover:bg-purple-700 mt-2">
+                Add Message
+              </button>
+              <label class="block mt-4 mb-2">Exit Name</label>
+              <input type="text" class="exit-name w-full p-2 border rounded mb-4" value="${exit.name}">
+              <label class="block mb-2">Send to</label>
+              <select class="w-full p-2 border rounded">
+                <option>Choose the next step</option>
+              </select>
+            `;
+            // When the exit-name input changes, update the classes field.
+            topicDiv.querySelector('.exit-name').addEventListener('input', updateClassesInputFromTopics);
+            // Attach delete-topic functionality
+            topicDiv.querySelector('.delete-topic').addEventListener('click', () => {
+              topicDiv.remove();
+              updateClassesInputFromTopics();
+            });
+            // Attach add-message functionality
+            topicDiv.querySelector('.add-message').addEventListener('click', () => {
+              const messagesContainer = topicDiv.querySelector('.sample-contact-messages');
+              const messageDiv = document.createElement('div');
+              messageDiv.className = 'sample-contact-message flex items-center space-x-2';
+              messageDiv.innerHTML = `
+                <input type="text" placeholder="Insert sample contact message..." class="w-full p-2 border rounded">
+                <button class="delete-message text-gray-500 hover:text-gray-700">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3-11a1 1 0 10-2 0v6a1 1 0 102 0V7zm-4 0a1 1 0 10-2 0v6a1 1 0 102 0V7z" clip-rule="evenodd" />
+                  </svg>
+                </button>
+              `;
+              messageDiv.querySelector('.delete-message').addEventListener('click', () => {
+                messageDiv.remove();
+              });
+              messagesContainer.appendChild(messageDiv);
+            });
+            topicsContainer.appendChild(topicDiv);
+          }
+        });
+      }
+      // Update the classes field after populating topics.
+      updateClassesInputFromTopics();
+    }
+
+    /**
+     * Reads all exit-name inputs from the topics container and builds
+     * a string of the format "0:topicName\n1:topicName\n..." and
+     * sets that as the value of the classesInput textarea.
+     */
+    function updateClassesInputFromTopics() {
+      const topicsContainer = document.getElementById('topicsContainer');
+      const exitNameInputs = topicsContainer.querySelectorAll('.exit-name');
+      let classesString = '';
+      exitNameInputs.forEach((input, index) => {
+        classesString += index + ':' + input.value + "\n";
+      });
+      const classesInput = document.getElementById('classesInput');
+      if (classesInput) {
+        classesInput.value = classesString.trim();
+      }
+    }
+
+    // TAB SWITCHING LOGIC
     const preferencesTab = document.getElementById('preferencesTab');
     const exitsTab = document.getElementById('exitsTab');
     const preferencesContent = document.getElementById('preferencesContent');
@@ -179,20 +301,16 @@
       preferencesTab.classList.remove('text-purple-600', 'border-purple-600');
     });
 
-    // Add Topic Logic
+    // ADD TOPIC BUTTON (manual addition)
     const addTopicButton = document.getElementById('addTopicButton');
-    const topicsContainer = document.getElementById('topicsContainer');
-
     addTopicButton.addEventListener('click', () => {
+      const topicsContainer = document.getElementById('topicsContainer');
       const topicDiv = document.createElement('div');
       topicDiv.className = 'p-4 border rounded relative space-y-4';
-
       topicDiv.innerHTML = `
-        <!-- Delete Topic Button -->
         <button class="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600 delete-topic">
           Delete Topic
         </button>
-
         <label class="block mb-2">Sample Contact Messages</label>
         <div class="sample-contact-messages space-y-4">
           <div class="sample-contact-message flex items-center space-x-2">
@@ -207,21 +325,21 @@
         <button class="add-message bg-purple-600 text-white px-2 py-1 rounded hover:bg-purple-700 mt-2">
           Add Message
         </button>
-
         <label class="block mt-4 mb-2">Exit Name</label>
-        <input type="text" placeholder="Name your exit" class="w-full p-2 border rounded mb-4">
-
+        <input type="text" placeholder="Name your exit" class="exit-name w-full p-2 border rounded mb-4">
         <label class="block mb-2">Send to</label>
         <select class="w-full p-2 border rounded">
           <option>Choose the next step</option>
         </select>
       `;
-
-      // Add logic for adding/deleting sample contact messages
-      const addMessageButton = topicDiv.querySelector('.add-message');
-      const messagesContainer = topicDiv.querySelector('.sample-contact-messages');
-
-      addMessageButton.addEventListener('click', () => {
+      // When the exit-name input changes, update the classes field.
+      topicDiv.querySelector('.exit-name').addEventListener('input', updateClassesInputFromTopics);
+      topicDiv.querySelector('.delete-topic').addEventListener('click', () => {
+        topicDiv.remove();
+        updateClassesInputFromTopics();
+      });
+      topicDiv.querySelector('.add-message').addEventListener('click', () => {
+        const messagesContainer = topicDiv.querySelector('.sample-contact-messages');
         const messageDiv = document.createElement('div');
         messageDiv.className = 'sample-contact-message flex items-center space-x-2';
         messageDiv.innerHTML = `
@@ -232,23 +350,17 @@
             </svg>
           </button>
         `;
-
-        // Add delete logic for the newly added message
         messageDiv.querySelector('.delete-message').addEventListener('click', () => {
           messageDiv.remove();
         });
-
         messagesContainer.appendChild(messageDiv);
       });
-
-      topicDiv.querySelector('.delete-topic').addEventListener('click', () => {
-        topicDiv.remove();
-      });
-
       topicsContainer.appendChild(topicDiv);
+      updateClassesInputFromTopics();
     });
-      // Test Button Logic
-      const testButton = document.getElementById('testButton');
+
+    // POPUP AND TEST BUTTON LOGIC
+    const testButton = document.getElementById('testButton');
     const popupOverlay = document.getElementById('popupOverlay');
     const closePopupButton = document.getElementById('closePopupButton');
 
@@ -260,13 +372,14 @@
       popupOverlay.classList.add('hidden');
     });
 
-    // Microphone Input Logic
+    // MICROPHONE INPUT LOGIC
     const startMicButton = document.getElementById('startMicButton');
     const transcriptionDiv = document.getElementById('transcription');
 
     startMicButton.addEventListener('click', async () => {
       try {
-        const speechRecognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const speechRecognition = new SpeechRecognition();
         speechRecognition.interimResults = true;
         speechRecognition.continuous = true;
 
@@ -284,6 +397,43 @@
         };
       } catch (error) {
         transcriptionDiv.innerHTML = "Speech recognition not supported in this browser.";
+      }
+    });
+
+    // API CALL LOGIC FOR THE TALKDESK ENDPOINT (updated)
+    const sendTextButton = document.getElementById('sendTextButton');
+    sendTextButton.addEventListener('click', async () => {
+      const textInputValue = document.getElementById('textInput').value;
+      // Use the classes from the textarea which is auto-populated from the topics.
+      const classesInputValue = document.getElementById('classesInput').value;
+      
+      if (!textInputValue) {
+        alert("Please enter some text.");
+        return;
+      }
+      sendTextButton.disabled = true;
+      sendTextButton.innerText = "Sending...";
+      try {
+        const response = await fetch('/api/generate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ text: textInputValue, classes: classesInputValue })
+        });
+        if (!response.ok) {
+          const errorData = await response.json();
+          alert("Error: " + errorData.message);
+        } else {
+          const data = await response.json();
+          transcriptionDiv.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+        }
+      } catch (error) {
+        console.error(error);
+        alert("Request failed: " + error);
+      } finally {
+        sendTextButton.disabled = false;
+        sendTextButton.innerText = "Send";
       }
     });
   </script>
